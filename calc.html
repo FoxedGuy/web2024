@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculator</title>
+<script>
+    let focuswhich = null
+    let operation = '+'
+    function gen() {
+        const main = document.getElementById("main")
+        for (let i = 0; i < 10; i++) {
+            const key = document.createElement("button")
+            key.innerText = i
+            key.onclick = add
+            key.dataset.value = i
+            main.appendChild(key)
+            if (i % 3 == 2){
+                const elem = document.createElement("br")
+                main.appendChild(elem)
+            }
+        }
+        let elem1 = document.createElement("br")
+        main.appendChild(elem1)
+        let key = document.createElement("button")
+        key.innerText = "."
+        key.onclick = add
+        main.appendChild(key)
+        let buttons = ['*', '/','+','-']
+        for (let index = 0; index < buttons.length; index++) {
+            const key = document.createElement("button")
+            key.innerText = buttons[index];
+            key.value = buttons[index]
+            main.appendChild(key)
+            key.onclick = setoperation
+        }
+        let eq = document.createElement("button")
+        eq.onclick = count
+        eq.innerText = '='
+        main.appendChild(eq)
+        let c = document.createElement("button")
+        c.innerText = "C"
+        c.onclick = clear
+        main.appendChild(c)
+
+        elem1 = document.createElement("br")
+        main.appendChild(elem1)
+        
+        const selectedop = document.createElement("p")
+        selectedop.id = "selectedop"
+        selectedop.innerText = "selected op: " + operation
+        main.appendChild(selectedop)
+        
+        const first = document.createElement("textarea")
+        first.id = "first"
+        first.onclick = setwhich
+        const second = document.createElement("textarea")
+        second.id = "second"
+        second.onclick = setwhich
+        main.appendChild(first)
+        main.appendChild(second)
+        focuswhich = first
+        elem1 = document.createElement("br")
+        main.appendChild(elem1)
+        const result = document.createElement("textarea")
+        result.id = "result"
+        main.appendChild(result)
+
+        const history = document.createElement("p")
+        history.id = "history"
+        history.innerText = "History: \n"
+        main.appendChild(history)
+    }
+    function setwhich(){
+        focuswhich = this;
+    }
+
+    function clear(){
+        document.getElementById("first").value = ""
+        document.getElementById("second").value = ""
+    }
+
+    function setoperation(){
+        operation = this.innerText
+        let selectedop = document.getElementById("selectedop")
+        selectedop.innerText = "selected op: " + this.innerText
+    }
+
+    function count(){
+        let first = document.getElementById("first").value
+        let second = document.getElementById("second").value
+        let result = document.getElementById("result")
+        let str = first + " " + operation + " " + second
+        try {
+            let res = eval(str)
+            if (res === Infinity){
+                result.value = "Division by zero!"
+                throw new Error("Division by zero!")
+            }   
+            result.value = res
+            str += " = " + res
+            const main = document.getElementById("main")
+            let new_h = document.createElement('p')
+            new_h.innerText = str + '\n'
+            main.appendChild(new_h)
+        } catch (e){
+            if (e instanceof SyntaxError){
+                alert(e.message);
+            }
+        }
+        
+    }
+
+    function add() {
+        focuswhich.value += this.innerText
+    }
+</script>
+</head>
+<body onload="gen()">
+<div id="main">
+
+</div>
+</body>
+</html>
