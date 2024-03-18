@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        #main {
+            width: 640px;
+            height: 480px;
+            margin: auto;
+            border: 1px solid black;
+        }
+    </style>
+    <script>
+        var canvas
+        var ctx
+        var pos_x = 320, pos_y = 430
+        var welcome_screen = true
+        var shoot_x, shoot_y
+        var shoot = false
+        var enemies = []
+        var counter = 0
+        var enemy_shoots = []
+        var enemy_speed = 5
+        var enemy_shoots_speed = 2
+        var max_enemy_shoots = 10
+        var lost = false, won = false
+
+        function draw_hero() {
+            ctx.save()
+            ctx.fillStyle = 'rgba(255, 0, 0, 1)';
+            ctx.translate(pos_x, pos_y)
+            ctx.fillRect(0,0,30,30)
+            ctx.restore()
+        }
+
+        function draw_enemy(pos_x, pos_y) {
+            ctx.save()
+            ctx.fillStyle = 'rgba(0, 255, 0, 1)';
+            ctx.translate(pos_x,pos_y)
+            ctx.fillRect(0,0,30,30)
+            ctx.restore()
+            if (Math.random() < 0.001 && max_enemy_shoots > enemy_shoots.length) {
+                enemy_shoots.push({x: pos_x + 15, y: pos_y + 30})
+            }
+        }
+
+        function move_enemies() {
+            for (let i = 0; i < enemies.length; i++) {
+                enemies[i].y += enemy_speed
+            }
+        }
+
+        function draw_enemies() {
+            for (let i = 0; i < enemies.length; i++) {
+                draw_enemy(enemies[i].x, enemies[i].y)
+            }
+        }
+
+        function draw_enemy_shoots() {
+            for (let i = 0; i < enemy_shoots.length; i++) {
+                ctx.save()
+                ctx.fillStyle = 'rgba(150, 0, 255, 1)';
+                ctx.translate(enemy_shoots[i].x, enemy_shoots[i].y)
+                ctx.fillRect(0,0,5,10)
+                enemy_shoots[i].y += enemy_shoots_speed
+                if (enemy_shoots[i].y > 480) {
+                    enemy_shoots.splice(i, 1)
+                }
+                ctx.restore()
+            }
+        }
+
+        function check_collision() {
+            for (let i = 0; i < enemies.length; i++) {
+                if (shoot_x > enemies[i].x && shoot_x < enemies[i].x + 30 && shoot_y > enemies[i].y && shoot_y < enemies[i].y + 30) {
+                    enemies.splice(i, 1)
+                    shoot = false
+                    break
+                }
+            }
+            for (let i = 0; i < enemy_shoots.length; i++) {
+                if (pos_x < enemy_shoots[i].x && pos_x > enemy_shoots[i].x - 30 &&
+                    pos_y < enemy_shoots[i].y && pos_y > enemy_shoots[i].y - 30) {
+                    lost = true
+                    return
+                }
+            }
+            for (let i = 0; i < enemies.length; i++) {
+                if (enemies[i].y+30 > 450) {
+                    lost = true
+                    return
+                }
+            }
+        }
+
+        function redraw(){
+            ctx.clearRect(0,0,640,480) // czyszczenie tkaniny
+            if (won) {
+                draw_hero()
+                ctx.font = '32px sans-serif'
+                ctx.textAlign = 'center'
+                ctx.fillText('YOU WON', 320, 240)
+                return
+            }
+            if (lost) {
+                ctx.font = '32px sans-serif'
+                ctx.textAlign = 'center'
+                ctx.fillText('YOU LOST (F5 TO RESET)', 320, 240)
+                return
+            }
+            draw_hero()
+
+            if (shoot) {
+                draw_shoot()
+            }
+            draw_enemies()
+            check_collision()
+            counter += 1
+            if (counter % 50 == 0){
+                counter = 0
+                move_enemies()
+            }
+            draw_enemy_shoots()
+            if (enemies.length == 0) {
+                won = true
+                return
+            }
+        }
+
+        function init() {
+            window.addEventListener( "keydown", keyListener, false )
+            canvas = document.getElementById('game')
+            ctx = canvas.getContext('2d')
+            ctx.font = '32px sans-serif'
+            ctx.textAlign = 'center'
+            ctx.fillText('READY? (PRESS ANYTHING TO START)', 320, 240)
+            draw_hero()
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 18; j++) {
+                    enemies.push({x: j * 30 + 5 * j, y: i * 30 + 5 * i})
+                }
+            }
+        }
+
+        function draw_shoot() {
+            if (shoot_y < 0) {
+                shoot = false
+                return
+            }
+            ctx.save()
+            ctx.fillStyle = 'rgba(0, 0, 255, 1)';
+            ctx.translate(shoot_x, shoot_y)
+            ctx.fillRect(0,0,5,10)
+            shoot_y -= 10
+            ctx.restore()
+        }
+
+        function keyListener(e) {
+            if(welcome_screen) {
+                ctx.clearRect(0,0,640,480)
+                welcome_screen = false
+                window.setInterval(redraw, 10)
+            }
+            switch(e.keyCode) {
+                case 32:
+                    if (!shoot){
+                        shoot = true
+                        shoot_x = pos_x + 5
+                        shoot_y = pos_y - 10
+                        draw_shoot()
+                    }
+                    break
+                case 37: // naciśnięto strzałkę w lewo
+                    // maximum 0 or pos
+                    pos_x = pos_x-10 < 0 ? 0 : pos_x-10
+                    break
+                case 38: // naciśnięto strzałkę w górę
+                    break
+                case 39: // naciśnięto strzałkę w prawo
+                    pos_x = pos_x+10 > 610 ? 610 : pos_x+10
+                    break
+                case 40: // naciśnięto strzałkę w dół
+                    break
+            }
+        }
+    </script>
+</head>
+<body onload="init()">
+<div id="main">
+    <canvas id="game" width="640" height="480">
+        Zacznij w końcu używać współczesnej przeglądarki!
+    </canvas>
+</div>
+</body>
+</html>
